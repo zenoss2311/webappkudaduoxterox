@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venice Wallet</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --primary: #1abc9c; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: #111;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 15px;
+            min-height: 100vh;
+        }
+        .card {
+            background: #1b1b1b;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .title {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: gold;
+        }
+        .info {
+            margin: 12px 0;
+            font-size: 17px;
+        }
+        hr { border: 1px solid #333; margin: 20px 0; }
+        
+        .nav {
+            display: flex;
+            background: #222;
+            border-radius: 8px;
+            padding: 5px;
+            margin: 20px 0;
+        }
+        .nav button {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        .nav button.active {
+            background: var(--primary);
+        }
+
+        input, select {
+            width: 100%;
+            height: 50px;
+            background: #222;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 0 15px;
+            margin: 8px 0;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            height: 52px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .row { display: flex; gap: 10px; }
+        .row button { flex: 1; }
+        .hidden { display: none !important; }
+        .success { color: #1abc9c; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="title">Venice Wallet</div>
+        
+        <div class="info">🟧 ID Pengguna : <span id="userid"></span></div>
+        <div class="info">🟧 Nama : <span id="username"></span></div>
+        <div class="info">🟧 Saldo : <span id="saldo">0</span> Coin</div>
+        <hr>
+
+        <!-- Navigation -->
+        <div class="nav">
+            <button onclick="showSection(0)" class="active" id="btn0">Wallet</button>
+            <button onclick="showSection(1)" id="btn1">Deposit</button>
+            <button onclick="showSection(2)" id="btn2">Withdraw</button>
+        </div>
+
+        <!-- WALLET SECTION -->
+        <div id="sec0">
+            <button onclick="refreshSaldo()">🔄 Refresh Saldo</button>
+            <p style="text-align:center; margin-top:20px; color:#aaa;">Gunakan tombol di atas untuk berpindah halaman</p>
+        </div>
+
+        <!-- DEPOSIT SECTION -->
+        <div id="sec1" class="hidden">
+            <label>Masukkan jumlah point recharge</label>
+            <input type="number" id="dep-amount" placeholder="100" value="100">
+            <div class="info">1 point = 1000 IDR</div>
+            <button onclick="doDeposit()">Lanjut ke QRIS</button>
+        </div>
+
+        <!-- WITHDRAW SECTION -->
+        <div id="sec2" class="hidden">
+            <label>Jumlah Penarikan (Point)</label>
+            <input type="number" id="wd-amount" placeholder="0">
+
+            <label>Jenis Dompet</label>
+            <select id="wd-code">
+                <option value="">Pilih Dompet</option>
+                <option value="OVO">OVO</option>
+                <option value="DANA">DANA</option>
+                <option value="GOPAY">GoPay</option>
+                <option value="SHOPEEPAY">ShopeePay</option>
+                <option value="LINKAJA">LinkAja</option>
+            </select>
+
+            <label>Nama Akun</label>
+            <input type="text" id="wd-name" placeholder="Nama Lengkap">
+
+            <label>Email</label>
+            <input type="email" id="wd-email" placeholder="email@contoh.com">
+
+            <label>Nomor Telepon</label>
+            <input type="tel" id="wd-phone" placeholder="08123456789">
+
+            <label>Nomor Rekening / Akun Dompet</label>
+            <input type="text" id="wd-account" placeholder="Nomor Akun">
+
+            <button onclick="doWithdraw()">Ajukan Penarikan</button>
+        </div>
+    </div>
+
+    <script>
+        Telegram.WebApp.ready();
+        
+        const user = Telegram.WebApp.initDataUnsafe.user || { id: 123456789, first_name: "Player" };
+        
+        document.getElementById("userid").innerText = user.id;
+        document.getElementById("username").innerText = user.first_name;
+
+        let saldo = 125000; // Saldo awal untuk simulasi
+
+        function updateSaldoDisplay() {
+            document.getElementById("saldo").innerText = saldo;
+        }
+
+        function showSection(n) {
+            for (let i = 0; i < 3; i++) {
+                document.getElementById(`sec${i}`).classList.toggle('hidden', i !== n);
+                document.getElementById(`btn${i}`).classList.toggle('active', i === n);
+            }
+        }
+
+        function refreshSaldo() {
+            alert("Saldo saat ini: " + saldo + " Coin");
+            updateSaldoDisplay();
+        }
+
+        async function doDeposit() {
+            const amount = parseInt(document.getElementById("dep-amount").value);
+            if (!amount || amount <= 0) {
+                alert("Masukkan jumlah point yang valid!");
+                return;
+            }
+            
+            // Simulasi proses deposit
+            if (confirm(`Buat deposit sebesar ${amount} point (${amount*1000} IDR)?`)) {
+                alert("✅ QRIS Deposit berhasil dibuat!\n\n(Dalam versi production, akan redirect ke link QRIS)");
+                // Di production: window.location = qrisUrl;
+            }
+        }
+
+        async function doWithdraw() {
+            const amount = document.getElementById("wd-amount").value;
+            const code = document.getElementById("wd-code").value;
+            const name = document.getElementById("wd-name").value;
+            const account = document.getElementById("wd-account").value;
+
+            if (!amount || !code || !name || !account) {
+                alert("Mohon isi semua field yang diperlukan!");
+                return;
+            }
+
+            if (confirm(`Ajukan penarikan ${amount} point ke ${code}?\n\nNama: ${name}`)) {
+                // Simulasi berhasil
+                saldo = Math.max(0, saldo - parseInt(amount));
+                updateSaldoDisplay();
+                
+                alert("✅ Penarikan berhasil diajukan!\nStatus: Processing");
+                Telegram.WebApp.close();
+            }
+        }
+
+        // Inisialisasi
+        window.onload = () => {
+            updateSaldoDisplay();
+            showSection(0);
+        };
+    </script>
+</body>
+</html>
